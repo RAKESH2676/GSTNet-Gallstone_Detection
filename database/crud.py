@@ -330,19 +330,24 @@ def prune_old_records(db: Session):
     for pred in old_preds:
         patient_ids_to_check.add(pred.patient_id)
         
-        # Clean up physical files if they exist
+        # Clean up physical files if they exist (local fallback or Supabase Cloud)
+        from backend.supabase_storage import delete_from_supabase
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         for path_attr in [pred.image_path, pred.heatmap_path, pred.report_path]:
             if path_attr:
-                # Convert URL path to relative path, then absolute path
-                rel_path = path_attr.lstrip('/')
-                abs_path = os.path.join(base_dir, rel_path)
-                try:
-                    if os.path.exists(abs_path) and os.path.isfile(abs_path):
-                        os.remove(abs_path)
-                        print(f"[CLEANUP LOG] Deleted physical file: {abs_path}")
-                except Exception as file_err:
-                    print(f"[CLEANUP LOG] Failed to delete file {abs_path}: {file_err}")
+                if path_attr.startswith("http://") or path_attr.startswith("https://"):
+                    # Clean up from Supabase Storage
+                    delete_from_supabase(path_attr)
+                else:
+                    # Clean up local filesystem (local fallback)
+                    rel_path = path_attr.lstrip('/')
+                    abs_path = os.path.join(base_dir, rel_path)
+                    try:
+                        if os.path.exists(abs_path) and os.path.isfile(abs_path):
+                            os.remove(abs_path)
+                            print(f"[CLEANUP LOG] Deleted physical file: {abs_path}")
+                    except Exception as file_err:
+                        print(f"[CLEANUP LOG] Failed to delete file {abs_path}: {file_err}")
                     
         # Delete prediction record from DB
         db.delete(pred)

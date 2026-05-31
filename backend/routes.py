@@ -7,6 +7,7 @@ from database.db_manager import SessionLocal
 from database import crud
 from model.predict import predict_ultrasound, generate_gradcam
 from backend.report_generator import generate_pdf_report
+from backend.supabase_storage import upload_to_supabase
 
 api_bp = Blueprint("api", __name__)
 
@@ -253,7 +254,7 @@ def run_prediction():
         report_id = crud.generate_report_id(db)
         print(f"[PREDICT LOG] Assumed Report ID: '{report_id}'")
 
-        # 6. DB record
+        # 6. DB record (creates record to resolve prediction_id first)
         db_prediction = crud.create_prediction(
             db=db, patient_id=patient_id,
             image_path=orig_url, heatmap_path=heatmap_url,
@@ -262,7 +263,7 @@ def run_prediction():
         )
         prediction_id = db_prediction.prediction_id
 
-        # 7. PDF Report
+        # 7. Compile PDF Report locally
         report_filename = f"report_{report_id}.pdf"
         report_abs = os.path.join(current_app.config['REPORTS_FOLDER'], report_filename)
         print("[PREDICT LOG] Compiling clinical PDF report...")
@@ -274,10 +275,17 @@ def run_prediction():
             prediction_id=prediction_id, report_id=report_id,
             date_of_birth=dob,
         )
-        report_url = f"/reports/{report_filename}"
-        print(f"[PREDICT LOG] PDF Report saved at {report_abs}")
+        print(f"[PREDICT LOG] PDF Report compiled at {report_abs}")
 
-        db_prediction.report_path = report_url
+        # 8. Upload clinical assets to Supabase Storage (deletes local files on upload success)
+        supabase_image_url = upload_to_supabase("ultrasound-images", orig_abs, orig_filename)
+        supabase_heatmap_url = upload_to_supabase("heatmaps", heatmap_abs, heatmap_filename)
+        supabase_report_url = upload_to_supabase("reports", report_abs, report_filename)
+
+        # 9. Update DB record with Supabase Cloud URLs
+        db_prediction.image_path = supabase_image_url
+        db_prediction.heatmap_path = supabase_heatmap_url
+        db_prediction.report_path = supabase_report_url
         db.commit()
         db.refresh(db_prediction)
 

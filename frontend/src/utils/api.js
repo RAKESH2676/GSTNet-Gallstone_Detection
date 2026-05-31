@@ -8,6 +8,11 @@
  */
 
 export const getApiUrl = (path = '') => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+
   // 1. Check for explicit production API URL configuration
   if (import.meta.env.VITE_API_URL) {
     return `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}${path}`;
