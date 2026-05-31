@@ -626,6 +626,36 @@ def delete_admin_prediction(prediction_id):
         db.close()
 
 
+@api_bp.route("/db-health", methods=["GET"])
+def get_db_health():
+    """Checks database connection and returns dialect info."""
+    db = SessionLocal()
+    try:
+        # Run simple query to test connection
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
+        
+        # Get dialect from engine
+        dialect_name = db.bind.dialect.name
+        return jsonify({
+            "success": True,
+            "status": "healthy",
+            "dialect": dialect_name,
+            "message": f"Successfully connected to database using {dialect_name} dialect."
+        }), 200
+    except Exception as e:
+        import traceback
+        print(f"[DB HEALTH LOG] DB health check failed: {e}")
+        print(traceback.format_exc())
+        return jsonify({
+            "success": False,
+            "status": "unhealthy",
+            "error": str(e)
+        }), 500
+    finally:
+        db.close()
+
+
 # ═══════════════════════════ DASHBOARD ROUTE ══════════════════════════════════
 
 @api_bp.route("/dashboard", methods=["GET"])

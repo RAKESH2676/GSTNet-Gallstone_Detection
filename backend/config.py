@@ -17,6 +17,6 @@ class Config:
     REPORTS_FOLDER = REPORTS_FOLDER
     ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "bmp", "tif", "tiff"}
     
-    # SQLite configuration
-    SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(BASE_DIR, 'database', 'gstnet.db')}"
+    # SQLite or PostgreSQL configuration
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'database', 'gstnet.db')}")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
