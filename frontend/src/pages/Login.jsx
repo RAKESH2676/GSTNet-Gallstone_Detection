@@ -170,6 +170,19 @@ const Login = () => {
           </Text>
         </div>
 
+        <div style={{ textAlign: 'center', marginBottom: 12 }}>
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            New clinician?{' '}
+            <Button
+              type="link"
+              style={{ padding: 0, fontWeight: 700, color: '#7c3aed' }}
+              onClick={() => navigate('/register')}
+            >
+              Register clinician account
+            </Button>
+          </Text>
+        </div>
+
         <div style={{ textAlign: 'center', borderTop: '1px solid #f0f0f0', paddingTop: 12 }}>
           <Button
             type="link"

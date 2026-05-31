@@ -1,25 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Form, Input, Button, Card, Typography, Alert, Select, Tabs, message, DatePicker
-} from 'antd';
-import dayjs from 'dayjs';
+import { Form, Input, Button, Card, Typography, Alert, message } from 'antd';
 import {
   UserOutlined, LockOutlined, MailOutlined, ExperimentOutlined,
-  TeamOutlined, SafetyCertificateOutlined, ManOutlined, ArrowLeftOutlined
+  SafetyCertificateOutlined, ArrowLeftOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
-const { TabPane } = Tabs;
 
 const Register = () => {
-  const [patientForm] = Form.useForm();
-  const [adminForm] = Form.useForm();
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [activeTab, setActiveTab] = useState('patient');
   const particleRef = useRef(null);
   const navigate = useNavigate();
 
@@ -39,32 +32,6 @@ const Register = () => {
     return () => particles.forEach(p => p.remove());
   }, []);
 
-  const handlePatientRegister = async (values) => {
-    setLoading(true);
-    setErrorMsg('');
-    try {
-      const res = await axios.post('http://localhost:5000/api/register', {
-        username: values.username,
-        email: values.email,
-        password: values.password,
-        confirm_password: values.confirm_password,
-        role: 'patient',
-        patient_name: values.patient_name,
-        age: values.age,
-        gender: values.gender,
-        date_of_birth: values.date_of_birth ? values.date_of_birth.format('YYYY-MM-DD') : '',
-      });
-      if (res.data.success) {
-        message.success('Patient account created! Please sign in.');
-        navigate('/login');
-      }
-    } catch (err) {
-      setErrorMsg(err.response?.data?.message || 'Registration failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleAdminRegister = async (values) => {
     setLoading(true);
     setErrorMsg('');
@@ -78,11 +45,11 @@ const Register = () => {
         admin_code: values.admin_code,
       });
       if (res.data.success) {
-        message.success('Admin account created! Please sign in.');
+        message.success('Clinician account created! Please sign in.');
         navigate('/login');
       }
     } catch (err) {
-      setErrorMsg(err.response?.data?.message || 'Admin registration failed. Verify your admin code.');
+      setErrorMsg(err.response?.data?.message || 'Clinician registration failed. Verify your admin code.');
     } finally {
       setLoading(false);
     }
@@ -94,24 +61,24 @@ const Register = () => {
     <div className="login-bg" ref={particleRef}>
       <Card
         className="login-card animate-slide-up"
-        style={{ width: 500, borderRadius: 20, padding: '4px 0' }}
+        style={{ width: 480, borderRadius: 20, padding: '12px 0' }}
       >
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <div style={{
             width: 52, height: 52,
-            background: 'linear-gradient(135deg, #0f52ba 0%, #1a73e8 100%)',
+            background: 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)',
             borderRadius: 14, display: 'inline-flex',
             alignItems: 'center', justifyContent: 'center',
-            marginBottom: 12, boxShadow: '0 8px 24px rgba(15,82,186,0.3)'
+            marginBottom: 12, boxShadow: '0 8px 24px rgba(139, 92, 246, 0.3)'
           }}>
-            <ExperimentOutlined style={{ fontSize: 24, color: '#fff' }} />
+            <SafetyCertificateOutlined style={{ fontSize: 24, color: '#fff' }} />
           </div>
-          <Title level={3} style={{ margin: 0, color: '#0f52ba', fontFamily: 'Outfit', letterSpacing: '-0.5px' }}>
-            Create Account
+          <Title level={3} style={{ margin: 0, color: '#7c3aed', fontFamily: 'Outfit', letterSpacing: '-0.5px' }}>
+            Register Clinician Account
           </Title>
           <Text type="secondary" style={{ fontSize: 13 }}>
-            GSTNet™ Clinical Diagnostic Portal
+            GSTNet™ Authorized Portal Access Setup
           </Text>
         </div>
 
@@ -120,182 +87,77 @@ const Register = () => {
             style={{ marginBottom: 16, borderRadius: 10 }} closable onClose={() => setErrorMsg('')} />
         )}
 
-        <Tabs
-          activeKey={activeTab}
-          onChange={(k) => { setActiveTab(k); setErrorMsg(''); }}
-          centered
-          style={{ marginBottom: 4 }}
-          items={[
-            {
-              key: 'patient',
-              label: (
-                <span><TeamOutlined style={{ marginRight: 6 }} />Patient</span>
-              ),
-              children: (
-                <Form form={patientForm} layout="vertical" onFinish={handlePatientRegister}
-                  size="large" requiredMark={false}>
+        <Form form={form} layout="vertical" onFinish={handleAdminRegister}
+          size="large" requiredMark={false}>
 
-                  {/* Patient Name */}
-                  <Form.Item name="patient_name" label="Full Name"
-                    rules={[{ required: true, message: 'Enter your full name.' }]}>
-                    <Input prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
-                      placeholder="Full name (e.g. John Doe)" style={inputStyle} />
-                  </Form.Item>
+          {/* Username */}
+          <Form.Item name="username" label={<span style={{ fontWeight: 600 }}>Username</span>}
+            rules={[{ required: true, message: 'Choose a username.' }, { min: 3, message: 'At least 3 characters.' }]}>
+            <Input prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
+              placeholder="Enter clinician username" style={inputStyle} />
+          </Form.Item>
 
-                  {/* Date of Birth */}
-                  <Form.Item name="date_of_birth" label="Date of Birth"
-                    rules={[{ required: true, message: 'Date of birth is required for report access.' }]}>
-                    <DatePicker
-                      style={{ width: '100%', borderRadius: 10, height: 46, background: '#f8fafc' }}
-                      placeholder="Select date of birth"
-                      disabledDate={(d) => d && d > dayjs()}
-                      format="YYYY-MM-DD"
-                    />
-                  </Form.Item>
+          {/* Email */}
+          <Form.Item name="email" label={<span style={{ fontWeight: 600 }}>Clinical Email</span>}
+            rules={[{ required: true, message: 'Enter your clinical email.' }, { type: 'email', message: 'Invalid email.' }]}>
+            <Input prefix={<MailOutlined style={{ color: '#94a3b8' }} />}
+              placeholder="doctor@hospital.com" style={inputStyle} />
+          </Form.Item>
 
-                  {/* Age + Gender row */}
-                  <div style={{ display: 'flex', gap: 12 }}>
-                    <Form.Item name="age" label="Age" style={{ flex: 1 }}
-                      rules={[{ required: true, message: 'Enter age.' }]}>
-                      <Input type="number" min={1} max={120} placeholder="Age" style={inputStyle} />
-                    </Form.Item>
-                    <Form.Item name="gender" label="Gender" style={{ flex: 1 }}
-                      rules={[{ required: true, message: 'Select gender.' }]}>
-                      <Select placeholder="Gender" style={{ height: 46 }}>
-                        <Option value="Male">Male</Option>
-                        <Option value="Female">Female</Option>
-                        <Option value="Other">Other</Option>
-                      </Select>
-                    </Form.Item>
-                  </div>
+          {/* Password */}
+          <Form.Item name="password" label={<span style={{ fontWeight: 600 }}>Password</span>}
+            rules={[{ required: true, message: 'Enter a password.' }, { min: 6, message: 'At least 6 characters.' }]}>
+            <Input.Password prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
+              placeholder="Minimum 6 characters" style={inputStyle} />
+          </Form.Item>
 
-                  {/* Username */}
-                  <Form.Item name="username" label="Username"
-                    rules={[{ required: true, message: 'Choose a username.' }, { min: 3, message: 'At least 3 characters.' }]}>
-                    <Input prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
-                      placeholder="Username (min 3 chars)" style={inputStyle} />
-                  </Form.Item>
+          {/* Confirm Password */}
+          <Form.Item name="confirm_password" label={<span style={{ fontWeight: 600 }}>Confirm Password</span>}
+            dependencies={['password']}
+            rules={[
+              { required: true, message: 'Confirm your password.' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('password') === value) return Promise.resolve();
+                  return Promise.reject(new Error('Passwords do not match.'));
+                },
+              }),
+            ]}>
+            <Input.Password prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
+              placeholder="Re-enter password" style={inputStyle} />
+          </Form.Item>
 
-                  {/* Email */}
-                  <Form.Item name="email" label="Email Address"
-                    rules={[{ required: true, message: 'Enter your email.' }, { type: 'email', message: 'Invalid email.' }]}>
-                    <Input prefix={<MailOutlined style={{ color: '#94a3b8' }} />}
-                      placeholder="your@email.com" style={inputStyle} />
-                  </Form.Item>
+          {/* Admin Code */}
+          <Form.Item name="admin_code" label={<span style={{ fontWeight: 600 }}>Authorized Registration Code</span>}
+            rules={[{ required: true, message: 'Enter the clinical verification code.' }]}>
+            <Input.Password prefix={<SafetyCertificateOutlined style={{ color: '#94a3b8' }} />}
+              placeholder="Enter authorization code"
+              style={{ ...inputStyle, borderColor: '#f59e0b' }} />
+          </Form.Item>
 
-                  {/* Password */}
-                  <Form.Item name="password" label="Password"
-                    rules={[{ required: true, message: 'Enter a password.' }, { min: 6, message: 'At least 6 characters.' }]}>
-                    <Input.Password prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
-                      placeholder="Password (min 6 chars)" style={inputStyle} />
-                  </Form.Item>
+          <div style={{
+            background: '#fffbeb', border: '1px solid #fde68a',
+            borderRadius: 8, padding: '10px 14px', marginBottom: 20
+          }}>
+            <Text style={{ fontSize: 12, color: '#92400e' }}>
+              🔐 <b>Clinical Setup Code:</b> Use <b>GSTNET-ADMIN-2026</b> to complete register.
+            </Text>
+          </div>
 
-                  {/* Confirm Password */}
-                  <Form.Item name="confirm_password" label="Confirm Password"
-                    dependencies={['password']}
-                    rules={[
-                      { required: true, message: 'Confirm your password.' },
-                      ({ getFieldValue }) => ({
-                        validator(_, value) {
-                          if (!value || getFieldValue('password') === value) return Promise.resolve();
-                          return Promise.reject(new Error('Passwords do not match.'));
-                        },
-                      }),
-                    ]}>
-                    <Input.Password prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
-                      placeholder="Re-enter password" style={inputStyle} />
-                  </Form.Item>
-
-                  <Form.Item style={{ marginTop: 8, marginBottom: 8 }}>
-                    <Button type="primary" htmlType="submit" block loading={loading}
-                      style={{ height: 48, fontSize: 15, fontWeight: 700, borderRadius: 12 }}>
-                      Create Patient Account
-                    </Button>
-                  </Form.Item>
-                </Form>
-              ),
-            },
-            {
-              key: 'admin',
-              label: (
-                <span><SafetyCertificateOutlined style={{ marginRight: 6 }} />Admin</span>
-              ),
-              children: (
-                <Form form={adminForm} layout="vertical" onFinish={handleAdminRegister}
-                  size="large" requiredMark={false}>
-
-                  {/* Username */}
-                  <Form.Item name="username" label="Admin Username"
-                    rules={[{ required: true, message: 'Choose a username.' }, { min: 3, message: 'At least 3 characters.' }]}>
-                    <Input prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
-                      placeholder="Admin username" style={inputStyle} />
-                  </Form.Item>
-
-                  {/* Email */}
-                  <Form.Item name="email" label="Admin Email"
-                    rules={[{ required: true, message: 'Enter your email.' }, { type: 'email', message: 'Invalid email.' }]}>
-                    <Input prefix={<MailOutlined style={{ color: '#94a3b8' }} />}
-                      placeholder="admin@hospital.com" style={inputStyle} />
-                  </Form.Item>
-
-                  {/* Password */}
-                  <Form.Item name="password" label="Password"
-                    rules={[{ required: true, message: 'Enter a password.' }, { min: 6, message: 'At least 6 characters.' }]}>
-                    <Input.Password prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
-                      placeholder="Password (min 6 chars)" style={inputStyle} />
-                  </Form.Item>
-
-                  {/* Confirm Password */}
-                  <Form.Item name="confirm_password" label="Confirm Password"
-                    dependencies={['password']}
-                    rules={[
-                      { required: true, message: 'Confirm your password.' },
-                      ({ getFieldValue }) => ({
-                        validator(_, value) {
-                          if (!value || getFieldValue('password') === value) return Promise.resolve();
-                          return Promise.reject(new Error('Passwords do not match.'));
-                        },
-                      }),
-                    ]}>
-                    <Input.Password prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
-                      placeholder="Re-enter password" style={inputStyle} />
-                  </Form.Item>
-
-                  {/* Admin Code */}
-                  <Form.Item name="admin_code" label="Admin Registration Code"
-                    rules={[{ required: true, message: 'Enter the admin secret code.' }]}>
-                    <Input.Password prefix={<SafetyCertificateOutlined style={{ color: '#94a3b8' }} />}
-                      placeholder="Admin secret code"
-                      style={{ ...inputStyle, borderColor: '#f59e0b' }} />
-                  </Form.Item>
-
-                  <div style={{
-                    background: '#fffbeb', border: '1px solid #fde68a',
-                    borderRadius: 8, padding: '8px 12px', marginBottom: 16
-                  }}>
-                    <Text style={{ fontSize: 12, color: '#92400e' }}>
-                      🔐 Demo admin code: <b>GSTNET-ADMIN-2026</b>
-                    </Text>
-                  </div>
-
-                  <Form.Item style={{ marginTop: 4, marginBottom: 8 }}>
-                    <Button type="primary" htmlType="submit" block loading={loading}
-                      style={{ height: 48, fontSize: 15, fontWeight: 700, borderRadius: 12,
-                               background: 'linear-gradient(135deg,#7c3aed,#8b5cf6)' }}>
-                      Register Admin Account
-                    </Button>
-                  </Form.Item>
-                </Form>
-              ),
-            },
-          ]}
-        />
+          <Form.Item style={{ marginBottom: 12 }}>
+            <Button type="primary" htmlType="submit" block loading={loading}
+              style={{ height: 48, fontSize: 15, fontWeight: 700, borderRadius: 12,
+                       background: 'linear-gradient(135deg,#7c3aed,#8b5cf6)', border: 'none' }}>
+              Register Clinician Account
+            </Button>
+          </Form.Item>
+        </Form>
 
         {/* Back to Login */}
         <div style={{ textAlign: 'center', marginTop: 8, paddingTop: 12, borderTop: '1px solid #f0f0f0' }}>
           <Button type="link" icon={<ArrowLeftOutlined />}
             onClick={() => navigate('/login')}
-            style={{ fontWeight: 600, color: '#0f52ba' }}>
+            style={{ fontWeight: 600, color: '#7c3aed' }}>
             Back to Sign In
           </Button>
         </div>
