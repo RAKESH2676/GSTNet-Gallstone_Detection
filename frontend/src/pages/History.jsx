@@ -280,7 +280,7 @@ const History = () => {
         <Row gutter={[16, 16]} align="middle">
           
           {/* Search bar */}
-          <Col xs={24} sm={10} md={8}>
+          <Col xs={24} sm={12} md={10}>
             <Input
               placeholder="Search patient by name..."
               prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
@@ -292,23 +292,8 @@ const History = () => {
             />
           </Col>
           
-          {/* Findings Filter */}
-          <Col xs={12} sm={5} md={5}>
-            <Select
-              placeholder="Finding Outcome"
-              style={{ width: '100%' }}
-              value={predictionFilter}
-              onChange={setPredictionFilter}
-              size="large"
-              allowClear
-            >
-              <Option value="Normal">Normal</Option>
-              <Option value="Gallstone">Gallstone</Option>
-            </Select>
-          </Col>
-          
           {/* Gender Filter */}
-          <Col xs={12} sm={5} md={5}>
+          <Col xs={24} sm={6} md={8}>
             <Select
               placeholder="Patient Gender"
               style={{ width: '100%' }}
@@ -324,7 +309,7 @@ const History = () => {
           </Col>
 
           {/* Reset Filters */}
-          <Col xs={24} sm={4} md={6} style={{ textAlign: 'right' }}>
+          <Col xs={24} sm={6} md={6} style={{ textAlign: 'right' }}>
             <Button 
               type="dashed" 
               icon={<ReloadOutlined />} 
