@@ -1,5 +1,6 @@
 import os
-import requests
+import urllib.request
+import urllib.error
 import mimetypes
 
 def upload_to_supabase(bucket: str, file_path: str, filename: str) -> str:
@@ -40,9 +41,17 @@ def upload_to_supabase(bucket: str, file_path: str, filename: str) -> str:
             file_data = f.read()
             
         print(f"[STORAGE LOG] Uploading {filename} to Supabase bucket '{bucket}'...")
-        res = requests.post(upload_url, headers=headers, data=file_data, timeout=30)
         
-        if res.status_code == 200:
+        req = urllib.request.Request(upload_url, data=file_data, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=30) as response:
+                status_code = response.getcode()
+                response_text = response.read().decode("utf-8")
+        except urllib.error.HTTPError as e:
+            status_code = e.code
+            response_text = e.read().decode("utf-8")
+            
+        if status_code == 200:
             public_url = f"{supabase_url}/storage/v1/object/public/{bucket}/{filename}"
             print(f"[STORAGE LOG] Successfully uploaded to Supabase. Public URL: {public_url}")
             
@@ -56,7 +65,7 @@ def upload_to_supabase(bucket: str, file_path: str, filename: str) -> str:
                 
             return public_url
         else:
-            print(f"[STORAGE ERROR] Upload failed with status {res.status_code}: {res.text}")
+            print(f"[STORAGE ERROR] Upload failed with status {status_code}: {response_text}")
             print(f"[STORAGE WARNING] Keeping local file on disk for fallback access.")
             if bucket == "ultrasound-images" or bucket == "heatmaps":
                 return f"/uploads/{filename}"
@@ -101,10 +110,16 @@ def delete_from_supabase(public_url: str):
         }
         
         print(f"[STORAGE LOG] Deleting {filename} from Supabase bucket '{bucket}'...")
-        res = requests.delete(delete_url, headers=headers, timeout=15)
-        if res.status_code == 200:
+        req = urllib.request.Request(delete_url, headers=headers, method="DELETE")
+        try:
+            with urllib.request.urlopen(req, timeout=15) as response:
+                status_code = response.getcode()
+        except urllib.error.HTTPError as e:
+            status_code = e.code
+            
+        if status_code == 200:
             print(f"[STORAGE LOG] Successfully deleted {filename} from Supabase Storage.")
         else:
-            print(f"[STORAGE WARNING] Supabase delete returned status {res.status_code}: {res.text}")
+            print(f"[STORAGE WARNING] Supabase delete returned status {status_code}")
     except Exception as e:
         print(f"[STORAGE ERROR] Exception deleting file from Supabase: {e}")
