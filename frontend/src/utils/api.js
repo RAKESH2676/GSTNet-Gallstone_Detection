@@ -33,6 +33,6 @@ export const getApiUrl = (path = '') => {
     return `${protocol}//${hostname}:5000${path}`;
   }
 
-  // Deployed cloud environment: uses the same domain co-located with the static files
-  return `${window.location.origin}${path}`;
+  // Deployed cloud environment: uses the production Render backend deployment
+  return `https://gstnet-gallstone-detection.onrender.com${path}`;
 };
