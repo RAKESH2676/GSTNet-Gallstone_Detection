@@ -8,6 +8,7 @@ import UploadScan from './pages/UploadScan';
 import History from './pages/History';
 import About from './pages/About';
 import PatientReport from './pages/PatientReport';
+import AdminDashboard from './pages/AdminDashboard';
 import SidebarLayout from './components/SidebarLayout';
 
 // Auth guard component - checks localStorage for admin/doctor token
@@ -15,6 +16,19 @@ function RequireAuth({ children }) {
   const token = localStorage.getItem('gstnet_token');
   if (!token) {
     return <Navigate to="/login" replace />;
+  }
+  return children;
+}
+
+// Admin-only route guard
+function RequireAdmin({ children }) {
+  const token = localStorage.getItem('gstnet_token');
+  const user = JSON.parse(localStorage.getItem('gstnet_user') || '{}');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  if (user.role?.toLowerCase() !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
   }
   return children;
 }
@@ -29,6 +43,18 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/new-diagnosis" element={<UploadScan />} />
         <Route path="/patient-report" element={<PatientReport />} />
+
+        {/* Admin Dashboard */}
+        <Route
+          path="/admin-dashboard"
+          element={
+            <RequireAuth>
+              <RequireAdmin>
+                <SidebarLayout><AdminDashboard /></SidebarLayout>
+              </RequireAdmin>
+            </RequireAuth>
+          }
+        />
 
         {/* Protected Doctor/Admin Portal routes wrapped in SidebarLayout + Auth Guard */}
         <Route

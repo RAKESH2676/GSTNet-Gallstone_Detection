@@ -122,6 +122,34 @@ def create_patient(db: Session, name: str, age: int, gender: str, date_of_birth:
     return db_patient
 
 
+def get_all_patients(db: Session, search_query: str = None,
+                     gender_filter: str = None, sort_by: str = "created_at",
+                     sort_order: str = "desc"):
+    query = db.query(Patient)
+    if search_query:
+        query = query.filter(Patient.patient_name.ilike(f"%{search_query}%"))
+    if gender_filter:
+        query = query.filter(Patient.gender == gender_filter)
+
+    sort_column = getattr(Patient, sort_by, Patient.created_at)
+    if sort_order.lower() == "asc":
+        query = query.order_by(sort_column.asc())
+    else:
+        query = query.order_by(sort_column.desc())
+
+    return query.all()
+
+
+def delete_patient(db: Session, patient_id: int):
+    patient = db.query(Patient).filter(Patient.patient_id == patient_id).first()
+    if not patient:
+        return None
+    predictions = list(patient.predictions)
+    db.delete(patient)
+    db.commit()
+    return predictions
+
+
 # ─────────────────────────── Prediction CRUD ─────────────────────────────────
 
 def create_prediction(db: Session, patient_id: int, image_path: str,

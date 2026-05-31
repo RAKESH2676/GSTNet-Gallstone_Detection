@@ -10,9 +10,11 @@ import {
   MenuFoldOutlined,
   UserOutlined,
   HeartOutlined,
-  SafetyCertificateOutlined
+  SafetyCertificateOutlined,
+  SettingOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 
 const { Header, Sider, Content, Footer } = Layout;
 const { Text, Title } = Typography;
@@ -28,11 +30,16 @@ const SidebarLayout = ({ children }) => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
-  // Enforce session check
+  const user = JSON.parse(localStorage.getItem("gstnet_user") || '{"username":"Radiologist","role":"Admin"}');
+  const isAdmin = user.role?.toLowerCase() === 'admin';
+
+  // Enforce session check and configure default Axios Authorization header
   useEffect(() => {
     const token = localStorage.getItem("gstnet_token");
     if (!token) {
       navigate("/login");
+    } else {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
   }, [navigate]);
 
@@ -67,6 +74,12 @@ const SidebarLayout = ({ children }) => {
       label: 'Patient Logs',
       onClick: () => navigate('/history')
     },
+    isAdmin && {
+      key: '/admin-dashboard',
+      icon: <SettingOutlined />,
+      label: 'Admin Console',
+      onClick: () => navigate('/admin-dashboard')
+    },
     {
       key: '/patient-report',
       icon: <SafetyCertificateOutlined />,
@@ -90,20 +103,19 @@ const SidebarLayout = ({ children }) => {
       danger: true,
       onClick: handleLogout
     }
-  ];
+  ].filter(Boolean);
 
   const getBreadcrumbName = (pathname) => {
     switch (pathname) {
-      case '/dashboard':      return 'Dashboard';
-      case '/upload':         return 'Run Diagnosis';
-      case '/history':        return 'Patient Logs';
-      case '/patient-report': return 'Patient Report Access';
-      case '/about':          return 'About GSTNet';
-      default:                return 'Portal';
+      case '/dashboard':       return 'Dashboard';
+      case '/upload':          return 'Run Diagnosis';
+      case '/history':         return 'Patient Logs';
+      case '/admin-dashboard': return 'Admin Console';
+      case '/patient-report':  return 'Patient Report Access';
+      case '/about':           return 'About GSTNet';
+      default:                 return 'Portal';
     }
   };
-
-  const user = JSON.parse(localStorage.getItem("gstnet_user") || '{"username":"Radiologist","role":"Admin"}');
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
