@@ -114,22 +114,12 @@ const Home = () => {
             color: 'rgba(255, 255, 255, 0.75)',
             fontSize: '17px',
             maxWidth: 700,
-            margin: '0 auto 8px auto',
+            margin: '0 auto 0 auto',
             lineHeight: 1.6
           }}>
             Deep learning-based ultrasound scanning platform fusing high-resolution spatial features
             with texture co-occurrence analytics for clinical-grade gallstone detection.
           </Paragraph>
-          <Text style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            padding: '4px 12px',
-            borderRadius: 20,
-            fontSize: '12px',
-            color: '#38bdf8',
-            border: '1px solid rgba(56, 189, 248, 0.2)'
-          }}>
-            🔒 HIPAA Compliant & Patient Data Encryption Active
-          </Text>
         </div>
 
         {/* Primary Option Cards */}
