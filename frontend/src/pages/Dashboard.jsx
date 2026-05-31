@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { getApiUrl } from '../utils/api';
 
 const { Title, Text } = Typography;
 
@@ -26,7 +27,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/dashboard");
+        const response = await axios.get(getApiUrl("/api/dashboard"));
         if (response.data.success) {
           setData(response.data);
         }
@@ -180,7 +181,7 @@ const Dashboard = () => {
               type="default" 
               size="small" 
               icon={<DownloadOutlined />}
-              href={`http://localhost:5000${record.report_path}`}
+              href={getApiUrl(record.report_path)}
               target="_blank"
               style={{ borderRadius: 6 }}
             >

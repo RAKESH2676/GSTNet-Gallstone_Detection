@@ -11,6 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import { getApiUrl } from '../utils/api';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -39,10 +40,10 @@ const PatientReport = () => {
     setReport(null);
     setSubmitted(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/patient-report-access', {
+      const res = await axios.post(getApiUrl('/api/patient-report-access'), {
         report_id: values.report_id.trim().toUpperCase(),
         date_of_birth: values.date_of_birth.format('YYYY-MM-DD'),
-        password: values.password,
+        password: values.password.trim(),
       });
       if (res.data.success) {
         setReport(res.data.report);
@@ -69,7 +70,7 @@ const PatientReport = () => {
     setForgotLoading(true);
     setForgotError('');
     try {
-      const res = await axios.post('http://localhost:5000/api/forgot-password', {
+      const res = await axios.post(getApiUrl('/api/forgot-password'), {
         report_id: values.report_id.trim().toUpperCase(),
         patient_name: values.patient_name.trim(),
         date_of_birth: values.date_of_birth.format('YYYY-MM-DD'),
@@ -93,10 +94,10 @@ const PatientReport = () => {
     setForgotLoading(true);
     setForgotError('');
     try {
-      const res = await axios.post('http://localhost:5000/api/reset-password', {
+      const res = await axios.post(getApiUrl('/api/reset-password'), {
         patient_id: verifiedPatientId,
-        password: values.password,
-        confirm_password: values.confirm_password,
+        password: values.password.trim(),
+        confirm_password: values.confirm_password.trim(),
       });
       if (res.data.success) {
         setForgotStep(3);
@@ -197,7 +198,7 @@ const PatientReport = () => {
               {report.report_path && (
                 <Button
                   icon={<FilePdfOutlined />} size="large"
-                  href={`http://localhost:5000${report.report_path}`} target="_blank"
+                  href={getApiUrl(report.report_path)} target="_blank"
                   style={{
                     background: 'rgba(255,255,255,0.2)', borderColor: 'rgba(255,255,255,0.4)',
                     color: '#fff', fontWeight: 700, borderRadius: 10
@@ -319,13 +320,13 @@ const PatientReport = () => {
                   <div className="image-panel-container">
                     {report.image_path && (
                       <div className="scan-box" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', flex: 1 }}>
-                        <img src={`http://localhost:5000${report.image_path}`} alt="Original Ultrasound" />
+                        <img src={getApiUrl(report.image_path)} alt="Original Ultrasound" />
                         <Text strong type="secondary" style={{ display: 'block', marginTop: 8 }}>Original Ultrasound Scan</Text>
                       </div>
                     )}
                     {report.heatmap_path && (
                       <div className="scan-box" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', flex: 1 }}>
-                        <img src={`http://localhost:5000${report.heatmap_path}`} alt="Grad-CAM" />
+                        <img src={getApiUrl(report.heatmap_path)} alt="Grad-CAM" />
                         <Text strong style={{ color: '#0f52ba', display: 'block', marginTop: 8 }}>Grad-CAM Visualization</Text>
                       </div>
                     )}

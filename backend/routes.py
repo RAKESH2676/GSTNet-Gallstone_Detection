@@ -25,10 +25,13 @@ def login():
     """Unified login: legacy admin fallback + DB-backed patient/admin auth."""
     data = request.json or {}
     username = data.get("username", "").strip()
-    password = data.get("password", "")
+    password = data.get("password", "").strip()
+
+    print(f"[AUTH LOG] Login attempt for username='{username}'")
 
     # Legacy admin fallback
     if username == "admin" and password == "admin123":
+        print("[AUTH LOG] Legacy admin fallback login approved.")
         return jsonify({
             "success": True,
             "token": "gstnet-jwt-token-admin-2026",
@@ -39,7 +42,10 @@ def login():
     try:
         user = crud.authenticate_user(db, username, password)
         if not user:
+            print(f"[AUTH LOG] DB login failed: Invalid credentials for username='{username}'")
             return jsonify({"success": False, "message": "Invalid username or password."}), 401
+        
+        print(f"[AUTH LOG] DB login successful: username='{user.username}', role='{user.role}'")
         return jsonify({
             "success": True,
             "token": f"gstnet-jwt-{user.role}-{user.user_id}-2026",
@@ -60,11 +66,14 @@ def register():
     data = request.json or {}
     username = data.get("username", "").strip()
     email    = data.get("email", "").strip().lower()
-    password = data.get("password", "")
-    confirm  = data.get("confirm_password", "")
+    password = data.get("password", "").strip()
+    confirm  = data.get("confirm_password", "").strip()
     role     = data.get("role", "patient").lower()
 
+    print(f"[AUTH LOG] Registration request received: username='{username}', email='{email}', role='{role}'")
+
     if not username or not email or not password:
+        print("[AUTH LOG] Registration rejected: Missing required inputs.")
         return jsonify({"success": False, "message": "Username, email and password are required."}), 400
     if len(username) < 3:
         return jsonify({"success": False, "message": "Username must be at least 3 characters."}), 400
@@ -78,7 +87,9 @@ def register():
         return jsonify({"success": False, "message": "Role must be 'admin' or 'patient'."}), 400
 
     if role == "admin":
-        if data.get("admin_code", "") != ADMIN_SECRET_CODE:
+        admin_code = data.get("admin_code", "").strip()
+        if admin_code != ADMIN_SECRET_CODE:
+            print(f"[AUTH LOG] Admin registration rejected: Invalid admin setup code '{admin_code}'")
             return jsonify({"success": False, "message": "Invalid admin registration code."}), 403
 
     db = SessionLocal()
@@ -86,7 +97,7 @@ def register():
         patient_id = None
         if role == "patient":
             name  = data.get("patient_name", "").strip()
-            age_s = data.get("age", "")
+            age_s = data.get("age", "").strip()
             gender = data.get("gender", "").strip()
             dob    = data.get("date_of_birth", "").strip()
 
@@ -103,6 +114,7 @@ def register():
 
         user = crud.create_user(db, username=username, email=email,
                                 password=password, role=role, patient_id=patient_id)
+        print(f"[AUTH LOG] User created successfully: ID={user.user_id}, username='{user.username}'")
         return jsonify({
             "success": True,
             "message": f"{'Patient' if role == 'patient' else 'Admin'} account created successfully.",
@@ -110,9 +122,13 @@ def register():
         }), 201
 
     except ValueError as e:
+        print(f"[AUTH LOG] Registration value conflict: {e}")
         return jsonify({"success": False, "message": str(e)}), 409
     except Exception as e:
         db.rollback()
+        import traceback
+        print(f"[AUTH LOG] CRITICAL Registration error: {e}")
+        print(traceback.format_exc())
         return jsonify({"success": False, "message": f"Registration failed: {str(e)}"}), 500
     finally:
         db.close()
@@ -162,31 +178,40 @@ def run_prediction():
     1. Patient registration  2. Image save  3. GSTNet inference
     4. Grad-CAM heatmap      5. DB record   6. PDF with Report ID
     """
-    name    = request.form.get("patient_name")
-    age_str = request.form.get("age")
-    gender  = request.form.get("gender")
+    name    = request.form.get("patient_name", "").strip()
+    age_str = request.form.get("age", "").strip()
+    gender  = request.form.get("gender", "").strip()
     dob     = request.form.get("date_of_birth", "").strip() or None
-    password = request.form.get("password")
-    confirm  = request.form.get("confirm_password")
+    password = request.form.get("password", "").strip()
+    confirm  = request.form.get("confirm_password", "").strip()
+
+    print(f"[PREDICT LOG] Demographics received: Name='{name}', Age='{age_str}', Gender='{gender}', DOB='{dob}', PwdLen={len(password)}")
 
     if not name or not age_str or not gender:
+        print("[PREDICT LOG] Demographic validation failed: Missing fields.")
         return jsonify({"success": False, "message": "Missing patient demographics."}), 400
     try:
         age = int(age_str)
     except ValueError:
+        print(f"[PREDICT LOG] Demographic validation failed: Invalid age '{age_str}'")
         return jsonify({"success": False, "message": "Age must be an integer."}), 400
 
     if not password:
+        print("[PREDICT LOG] Demographic validation failed: Password empty.")
         return jsonify({"success": False, "message": "Password is required."}), 400
     if len(password) < 6:
+        print(f"[PREDICT LOG] Demographic validation failed: Password '{password}' length < 6")
         return jsonify({"success": False, "message": "Password must be at least 6 characters."}), 400
     if password != confirm:
+        print("[PREDICT LOG] Demographic validation failed: Passwords mismatch.")
         return jsonify({"success": False, "message": "Passwords do not match."}), 400
 
     if 'image' not in request.files:
+        print("[PREDICT LOG] Scan file validation failed: 'image' not in request.files.")
         return jsonify({"success": False, "message": "Ultrasound scan file is required."}), 400
     file = request.files['image']
     if file.filename == '' or not allowed_file(file.filename):
+        print(f"[PREDICT LOG] Scan file validation failed: Disallowed file name '{file.filename}'")
         return jsonify({"success": False, "message": "Invalid scan file."}), 400
 
     db = SessionLocal()
@@ -194,6 +219,7 @@ def run_prediction():
         # 1. Patient
         db_patient = crud.create_patient(db, name, age, gender, date_of_birth=dob, password=password)
         patient_id = db_patient.patient_id
+        print(f"[PREDICT LOG] Patient processed. ID={patient_id}, Name='{db_patient.patient_name}', DOB='{db_patient.date_of_birth}'")
 
         # 2. Save image
         ext = file.filename.rsplit('.', 1)[1].lower()
@@ -202,23 +228,27 @@ def run_prediction():
         orig_abs = os.path.join(current_app.config['UPLOAD_FOLDER'], orig_filename)
         file.save(orig_abs)
         orig_url = f"/uploads/{orig_filename}"
+        print(f"[PREDICT LOG] RAW scan saved at {orig_abs}")
 
         # 3. GSTNet inference
         from backend.app import gstnet_model, load_ai_model
         if gstnet_model is None:
             load_ai_model()
-        print("Executing GSTNet model inference...")
+        print("[PREDICT LOG] Executing GSTNet deep model prediction...")
         prediction_label, confidence = predict_ultrasound(gstnet_model, orig_abs)
+        print(f"[PREDICT LOG] Prediction completed: Verdict='{prediction_label}', Confidence={confidence}")
 
         # 4. Grad-CAM
         heatmap_filename = f"{file_uuid}_heatmap.{ext}"
         heatmap_abs = os.path.join(current_app.config['UPLOAD_FOLDER'], heatmap_filename)
-        print("Generating Grad-CAM visualization...")
+        print("[PREDICT LOG] Generating Grad-CAM heatmaps...")
         generate_gradcam(gstnet_model, orig_abs, heatmap_abs)
         heatmap_url = f"/uploads/{heatmap_filename}"
+        print(f"[PREDICT LOG] Heatmap saved at {heatmap_abs}")
 
         # 5. Generate Report ID
         report_id = crud.generate_report_id(db)
+        print(f"[PREDICT LOG] Assumed Report ID: '{report_id}'")
 
         # 6. DB record
         db_prediction = crud.create_prediction(
@@ -232,7 +262,7 @@ def run_prediction():
         # 7. PDF Report
         report_filename = f"report_{report_id}.pdf"
         report_abs = os.path.join(current_app.config['REPORTS_FOLDER'], report_filename)
-        print("Compiling clinical PDF report...")
+        print("[PREDICT LOG] Compiling clinical PDF report...")
         generate_pdf_report(
             patient_name=name, patient_age=age, patient_gender=gender,
             prediction=prediction_label, confidence=confidence,
@@ -242,11 +272,13 @@ def run_prediction():
             date_of_birth=dob,
         )
         report_url = f"/reports/{report_filename}"
+        print(f"[PREDICT LOG] PDF Report saved at {report_abs}")
 
         db_prediction.report_path = report_url
         db.commit()
         db.refresh(db_prediction)
 
+        print("[PREDICT LOG] Scan pipeline executed successfully. Returning data.")
         return jsonify({
             "success": True,
             "prediction": db_prediction.to_dict(),
@@ -255,7 +287,9 @@ def run_prediction():
 
     except Exception as e:
         db.rollback()
-        print(f"Prediction error: {e}")
+        import traceback
+        print(f"[PREDICT LOG] CRITICAL EXCEPTION IN DIAGNOSTIC PIPELINE: {e}")
+        print(traceback.format_exc())
         return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
     finally:
         db.close()
@@ -271,23 +305,42 @@ def patient_report_access():
     data = request.json or {}
     report_id   = data.get("report_id", "").strip().upper()
     date_of_birth = data.get("date_of_birth", "").strip()
-    password    = data.get("password", "")
+    password    = data.get("password", "").strip()
+
+    print(f"[REPORT ACCESS LOG] Access lookup query: Report ID='{report_id}', DOB='{date_of_birth}', PwdLen={len(password)}")
 
     if not report_id or not date_of_birth or not password:
+        print("[REPORT ACCESS LOG] Denied: Missing required request fields.")
         return jsonify({"success": False,
                         "message": "Report ID, Date of Birth, and Password are required."}), 400
 
     db = SessionLocal()
     try:
-        prediction = crud.get_prediction_by_report_id_dob_and_password(db, report_id, date_of_birth, password)
-        if not prediction:
-            return jsonify({
-                "success": False,
-                "message": "Invalid Report ID, Date of Birth, or Password."
-            }), 401
+        # Check prediction records
+        pred = db.query(crud.Prediction).filter(crud.Prediction.report_id == report_id).first()
+        if not pred:
+            print(f"[REPORT ACCESS LOG] Denied: No record found matching Report ID '{report_id}'")
+            return jsonify({"success": False, "message": "Invalid Report ID, Date of Birth, or Password."}), 401
 
-        return jsonify({"success": True, "report": prediction.to_dict()}), 200
+        patient = pred.patient
+        if not patient:
+            print("[REPORT ACCESS LOG] Denied: No linked patient profile found.")
+            return jsonify({"success": False, "message": "Invalid Report ID, Date of Birth, or Password."}), 401
+
+        print(f"[REPORT ACCESS LOG] Found linked Patient profile ID={patient.patient_id}, Name='{patient.patient_name}', DOB='{patient.date_of_birth}'")
+
+        if patient.date_of_birth != date_of_birth:
+            print(f"[REPORT ACCESS LOG] Denied: Date of Birth mismatch. Provided '{date_of_birth}' vs DB '{patient.date_of_birth}'")
+            return jsonify({"success": False, "message": "Invalid Report ID, Date of Birth, or Password."}), 401
+
+        if not patient.password_hash or not crud.verify_password(password, patient.password_hash):
+            print("[REPORT ACCESS LOG] Denied: Password hash mismatch.")
+            return jsonify({"success": False, "message": "Invalid Report ID, Date of Birth, or Password."}), 401
+
+        print("[REPORT ACCESS LOG] Approved: Authentication passed. Dispensing record details.")
+        return jsonify({"success": True, "report": pred.to_dict()}), 200
     except Exception as e:
+        print(f"[REPORT ACCESS LOG] CRITICAL EXCEPTION: {e}")
         return jsonify({"success": False, "message": str(e)}), 500
     finally:
         db.close()
@@ -450,16 +503,23 @@ def delete_prediction(prediction_id):
 def verify_admin_auth():
     """Validates the Authorization token and ensures the user has 'admin' role."""
     token = request.headers.get("Authorization", "")
+    print(f"[AUTH LOG] Received raw Authorization header: '{token}'")
     if token.startswith("Bearer "):
         token = token[7:]
     if not token:
         token = request.headers.get("X-Session-Token", "")
+        print(f"[AUTH LOG] Fallback X-Session-Token: '{token}'")
     if not token:
+        print("[AUTH LOG] Authentication rejected: No session token provided.")
         return False
+    token = token.strip()
     if token == "gstnet-jwt-token-admin-2026":
+        print("[AUTH LOG] Authentication approved: Valid legacy admin token.")
         return True
     if token.startswith("gstnet-jwt-admin-"):
+        print(f"[AUTH LOG] Authentication approved: Valid database admin token '{token}'.")
         return True
+    print(f"[AUTH LOG] Authentication rejected: Token '{token}' did not match any admin sequence.")
     return False
 
 

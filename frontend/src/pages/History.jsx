@@ -12,6 +12,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { getApiUrl } from '../utils/api';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -51,7 +52,7 @@ const History = () => {
         params.patient_id = currentUser.patient_id;
       }
 
-      const response = await axios.get('http://localhost:5000/api/history', { params });
+      const response = await axios.get(getApiUrl('/api/history'), { params });
       if (response.data.success) {
         setHistory(response.data.history);
       }
@@ -88,7 +89,7 @@ const History = () => {
       cancelText: 'Cancel',
       async onOk() {
         try {
-          const response = await axios.delete(`http://localhost:5000/api/delete-prediction/${predictionId}`);
+          const response = await axios.delete(getApiUrl(`/api/delete-prediction/${predictionId}`));
           if (response.data.success) {
             message.success(response.data.message);
             fetchHistory();
@@ -214,7 +215,7 @@ const History = () => {
                 type="default" 
                 size="small" 
                 icon={<DownloadOutlined />}
-                href={`http://localhost:5000${record.report_path}`}
+                href={getApiUrl(record.report_path)}
                 target="_blank"
                 style={{ borderRadius: 6 }}
               >

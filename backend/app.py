@@ -49,8 +49,8 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
-    # Enable CORS for React integration (default port 5173 for Vite)
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    # Enable CORS globally for all routes (to support mobile connections on local networks)
+    CORS(app, resources={r"/*": {"origins": "*"}})
     
     # Initialize SQLite database schema
     print("Initializing SQLite Database...")

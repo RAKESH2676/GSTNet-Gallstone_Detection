@@ -13,6 +13,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import { getApiUrl } from '../utils/api';
 
 const { Dragger } = Upload;
 const { Title, Text, Paragraph } = Typography;
@@ -115,16 +116,16 @@ const UploadScan = () => {
     setResult(null);
 
     const formData = new FormData();
-    formData.append("patient_name", values.patient_name);
-    formData.append("age", values.age);
+    formData.append("patient_name", values.patient_name.trim());
+    formData.append("age", String(values.age).trim());
     formData.append("gender", values.gender);
     formData.append("date_of_birth", values.date_of_birth.format("YYYY-MM-DD"));
-    formData.append("password", values.password);
-    formData.append("confirm_password", values.confirm_password);
+    formData.append("password", values.password.trim());
+    formData.append("confirm_password", values.confirm_password.trim());
     formData.append("image", fileList[0]);
 
     try {
-      const response = await axios.post("http://localhost:5000/api/predict", formData, {
+      const response = await axios.post(getApiUrl("/api/predict"), formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       if (response.data.success) {
@@ -354,7 +355,7 @@ const UploadScan = () => {
                     <Space size={14}>
                       <Button
                         type="primary" icon={<FilePdfOutlined />} size="large"
-                        href={`http://localhost:5000${result.prediction.report_path}`}
+                        href={getApiUrl(result.prediction.report_path)}
                         target="_blank"
                         style={{ background: '#0f52ba', borderColor: '#0f52ba', height: 48, borderRadius: 10 }}
                       >
@@ -371,13 +372,13 @@ const UploadScan = () => {
                 <Col xs={24} lg={14}>
                   <div className="image-panel-container">
                     <div className="scan-box">
-                      <img src={`http://localhost:5000${result.prediction.image_path}`} alt="Ultrasound scan" />
+                      <img src={getApiUrl(result.prediction.image_path)} alt="Ultrasound scan" />
                       <Text strong type="secondary" style={{ display: 'block', marginTop: 8 }}>
                         Figure A: Original Ultrasound
                       </Text>
                     </div>
                     <div className="scan-box">
-                      <img src={`http://localhost:5000${result.prediction.heatmap_path}`} alt="Grad-CAM" />
+                      <img src={getApiUrl(result.prediction.heatmap_path)} alt="Grad-CAM" />
                       <Text strong style={{ color: '#0f52ba', display: 'block', marginTop: 8 }}>
                         Figure B: Grad-CAM Explainability
                       </Text>

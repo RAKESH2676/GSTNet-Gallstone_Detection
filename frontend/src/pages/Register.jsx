@@ -6,6 +6,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { getApiUrl } from '../utils/api';
 
 const { Title, Text } = Typography;
 
@@ -36,13 +37,13 @@ const Register = () => {
     setLoading(true);
     setErrorMsg('');
     try {
-      const res = await axios.post('http://localhost:5000/api/register', {
-        username: values.username,
-        email: values.email,
-        password: values.password,
-        confirm_password: values.confirm_password,
+      const res = await axios.post(getApiUrl('/api/register'), {
+        username: values.username.trim(),
+        email: values.email.trim(),
+        password: values.password.trim(),
+        confirm_password: values.confirm_password.trim(),
         role: 'admin',
-        admin_code: values.admin_code,
+        admin_code: values.admin_code.trim(),
       });
       if (res.data.success) {
         message.success('Clinician account created! Please sign in.');

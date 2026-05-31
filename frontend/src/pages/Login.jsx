@@ -6,6 +6,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { getApiUrl } from '../utils/api';
 
 const { Title, Text } = Typography;
 
@@ -42,9 +43,9 @@ const Login = () => {
     setLoading(true);
     setErrorMsg('');
     try {
-      const response = await axios.post('http://localhost:5000/api/login', {
-        username: values.username,
-        password: values.password,
+      const response = await axios.post(getApiUrl('/api/login'), {
+        username: values.username.trim(),
+        password: values.password.trim(),
       });
 
       if (response.data.success) {

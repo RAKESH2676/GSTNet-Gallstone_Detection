@@ -9,6 +9,7 @@ import {
   BulbOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
+import { getApiUrl } from '../utils/api';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -20,7 +21,7 @@ const About = () => {
     const fetchMetrics = async () => {
       try {
         // Fetch static training metrics from docs folder via backend if exists
-        const response = await axios.get("http://localhost:5000/reports/../docs/metrics.json");
+        const response = await axios.get(getApiUrl("/reports/../docs/metrics.json"));
         setMetrics(response.data);
       } catch (err) {
         console.log("Training metrics not generated yet or offline.");

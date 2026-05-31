@@ -17,6 +17,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { getApiUrl } from '../utils/api';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -54,7 +55,7 @@ const AdminDashboard = () => {
       if (patientSearch) params.search = patientSearch;
       if (patientGender) params.gender = patientGender;
 
-      const response = await axios.get('http://localhost:5000/api/admin/patients', { params });
+      const response = await axios.get(getApiUrl('/api/admin/patients'), { params });
       if (response.data.success) {
         setPatients(response.data.patients);
       }
@@ -78,7 +79,7 @@ const AdminDashboard = () => {
       if (predOutcome) params.prediction = predOutcome;
       if (predGender) params.gender = predGender;
 
-      const response = await axios.get('http://localhost:5000/api/admin/predictions', { params });
+      const response = await axios.get(getApiUrl('/api/admin/predictions'), { params });
       if (response.data.success) {
         setPredictions(response.data.predictions);
       }
@@ -136,7 +137,7 @@ const AdminDashboard = () => {
       cancelText: 'Cancel',
       async onOk() {
         try {
-          const response = await axios.delete(`http://localhost:5000/api/admin/delete-patient/${patientId}`);
+          const response = await axios.delete(getApiUrl(`/api/admin/delete-patient/${patientId}`));
           if (response.data.success) {
             message.success(response.data.message);
             fetchPatients();
@@ -159,7 +160,7 @@ const AdminDashboard = () => {
       cancelText: 'Cancel',
       async onOk() {
         try {
-          const response = await axios.delete(`http://localhost:5000/api/admin/delete-prediction/${predictionId}`);
+          const response = await axios.delete(getApiUrl(`/api/admin/delete-prediction/${predictionId}`));
           if (response.data.success) {
             message.success(response.data.message);
             fetchPredictions();
@@ -340,7 +341,7 @@ const AdminDashboard = () => {
                 type="default"
                 size="small"
                 icon={<DownloadOutlined />}
-                href={`http://localhost:5000${record.report_path}`}
+                href={getApiUrl(record.report_path)}
                 target="_blank"
                 style={{ borderRadius: 6 }}
               >
