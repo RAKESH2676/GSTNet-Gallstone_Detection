@@ -303,3 +303,61 @@ def reset_patient_password(db: Session, patient_id: int, new_password: str):
     db.commit()
     db.refresh(patient)
     return True
+
+
+def prune_old_records(db: Session):
+    """
+    Deletes prediction logs, compiled PDF reports, and raw uploads
+    that are older than 3 days (72 hours).
+    Also removes the patient profile if they have no remaining predictions.
+    """
+    import os
+    from datetime import datetime, timedelta
+    
+    # 3 days ago limit
+    limit = datetime.utcnow() - timedelta(days=3)
+    
+    # 1. Find all old predictions
+    old_preds = db.query(Prediction).filter(Prediction.timestamp < limit).all()
+    if not old_preds:
+        return
+        
+    print(f"[CLEANUP LOG] Found {len(old_preds)} prediction records older than 3 days. Pruning...")
+    
+    # Track patient IDs to check for remaining predictions later
+    patient_ids_to_check = set()
+    
+    for pred in old_preds:
+        patient_ids_to_check.add(pred.patient_id)
+        
+        # Clean up physical files if they exist
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        for path_attr in [pred.image_path, pred.heatmap_path, pred.report_path]:
+            if path_attr:
+                # Convert URL path to relative path, then absolute path
+                rel_path = path_attr.lstrip('/')
+                abs_path = os.path.join(base_dir, rel_path)
+                try:
+                    if os.path.exists(abs_path) and os.path.isfile(abs_path):
+                        os.remove(abs_path)
+                        print(f"[CLEANUP LOG] Deleted physical file: {abs_path}")
+                except Exception as file_err:
+                    print(f"[CLEANUP LOG] Failed to delete file {abs_path}: {file_err}")
+                    
+        # Delete prediction record from DB
+        db.delete(pred)
+        
+    db.commit()
+    
+    # 2. Check and clean up orphaned patients who have zero remaining predictions
+    for p_id in patient_ids_to_check:
+        remaining = db.query(Prediction).filter(Prediction.patient_id == p_id).count()
+        if remaining == 0:
+            patient = db.query(Patient).filter(Patient.patient_id == p_id).first()
+            if patient:
+                print(f"[CLEANUP LOG] Pruning orphaned patient profile ID={p_id}, Name='{patient.patient_name}'")
+                if patient.user_account:
+                    db.delete(patient.user_account)
+                db.delete(patient)
+                
+    db.commit()

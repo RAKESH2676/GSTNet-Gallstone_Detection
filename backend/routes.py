@@ -216,6 +216,9 @@ def run_prediction():
 
     db = SessionLocal()
     try:
+        # Run automatic retention pruning (records older than 3 days)
+        crud.prune_old_records(db)
+        
         # 1. Patient
         db_patient = crud.create_patient(db, name, age, gender, date_of_birth=dob, password=password)
         patient_id = db_patient.patient_id
@@ -316,6 +319,9 @@ def patient_report_access():
 
     db = SessionLocal()
     try:
+        # Run automatic retention pruning (records older than 3 days)
+        crud.prune_old_records(db)
+        
         # Check prediction records
         pred = db.query(crud.Prediction).filter(crud.Prediction.report_id == report_id).first()
         if not pred:
@@ -662,6 +668,9 @@ def get_db_health():
 def get_dashboard():
     db = SessionLocal()
     try:
+        # Run automatic retention pruning (records older than 3 days)
+        crud.prune_old_records(db)
+        
         stats = crud.get_dashboard_stats(db)
         history_records = db.query(crud.Prediction).order_by(crud.Prediction.timestamp.asc()).all()
         monthly_data = {}
