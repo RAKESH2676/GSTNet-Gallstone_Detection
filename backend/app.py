@@ -77,6 +77,15 @@ def create_app():
     def health():
         return {"status": "healthy", "database": "connected"}, 200
         
+    @app.route('/')
+    def home():
+        return {
+            "project": "GSTNet Gallstone Detection System",
+            "status": "Backend Running",
+            "api": "/api",
+            "health": "/health"
+        }
+        
     return app
 
 # Create application instance
