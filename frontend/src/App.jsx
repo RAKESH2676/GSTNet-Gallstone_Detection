@@ -44,7 +44,7 @@ function App() {
           path="/upload"
           element={
             <RequireAuth>
-              <SidebarLayout><UploadScan /></RequireAuth>
+              <SidebarLayout><UploadScan /></SidebarLayout>
             </RequireAuth>
           }
         />
