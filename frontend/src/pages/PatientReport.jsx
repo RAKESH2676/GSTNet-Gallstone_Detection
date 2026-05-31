@@ -475,6 +475,7 @@ const PatientReport = () => {
             <span style={{ fontFamily: 'Outfit', fontWeight: 700 }}>Password Recovery Portal</span>
           </Space>
         }
+        open={forgotModalVisible}
         visible={forgotModalVisible}
         onCancel={closeForgotModal}
         footer={null}
