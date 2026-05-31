@@ -1,66 +1,66 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# ═══════════════════════════════════════════════════════════════
+# GSTNet™ Production Git Ignore Configuration
+# ═══════════════════════════════════════════════════════════════
 
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual Environment
-venv/
-.venv/
-env/
-ENV/
-env.bak/
-venv.bak/
-
-# SQLite Database
-database/gstnet.db
-database/*.db
-
-# Node.js
+# Dependencies and Node.js
 node_modules/
 .npm
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-store/
 
-# Dynamic User Uploads & Reports
+# Python Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+venv.bak/
+env.bak/
+
+# Python Compilation and Caching
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Production Builds
+dist/
+build/
+
+# IDEs and System Configurations
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.swp
+*.swo
+
+# Environment Variables and Credentials
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs and Temporary files
+*.log
+*.tmp
+tmp/
+
+# Deep Learning Models and Large Weights
+*.h5
+*.keras
+*.ckpt
+*.weights
+model/gstnet_model.keras
+
+# SQLite Databases
+database/*.db
+
+# Dynamic User Uploads & Clinical Reports (Excludes contents, tracks folders)
 uploads/*
 !uploads/.gitkeep
 reports/*
 !reports/.gitkeep
-
-# IDEs and Editors
-.vscode/
-.idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# OS generated files
-Thumbs.db
-ehthumbs.db
-Desktop.ini
