@@ -10,7 +10,7 @@ import {
   ArrowLeftOutlined, LockOutlined, CalendarOutlined,
   UserOutlined, HeartOutlined
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import dayjs from 'dayjs';
 
@@ -28,6 +28,22 @@ const UploadScan = () => {
   const [formValidated, setFormValidated] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Support loading dynamic state from Dashboard "Review" triggers
+  useEffect(() => {
+    if (location.state?.predictionResult) {
+      const histResult = location.state.predictionResult;
+      setResult({ prediction: histResult, patient: histResult.patient });
+      setFormValidated(true);
+      form.setFieldsValue({
+        patient_name: histResult.patient?.patient_name,
+        age: histResult.patient?.age,
+        gender: histResult.patient?.gender,
+        date_of_birth: histResult.patient?.date_of_birth ? dayjs(histResult.patient.date_of_birth) : undefined,
+      });
+    }
+  }, [location.state, form]);
 
   const steps = [
     "Uploading ultrasound scan to secure medical vault...",
@@ -124,59 +140,70 @@ const UploadScan = () => {
   };
 
   const isGallstone = result?.prediction?.prediction === 'Gallstone';
+  const isPublic = location.pathname === '/new-diagnosis';
+
+  const wrapperStyle = isPublic ? {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #0a1628 0%, #0f2847 40%, #0f52ba 100%)',
+    color: '#fff',
+    display: 'flex',
+    flexDirection: 'column'
+  } : {
+    display: 'flex',
+    flexDirection: 'column',
+    color: '#000'
+  };
+
+  const mainPadding = isPublic ? '40px 24px' : '0';
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0a1628 0%, #0f2847 40%, #0f52ba 100%)',
-      color: '#fff',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      {/* Header */}
-      <header style={{
-        padding: '16px 40px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        background: 'rgba(10, 22, 40, 0.7)',
-        backdropFilter: 'blur(10px)',
-        zIndex: 10
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{
-            width: 36, height: 36,
-            background: 'linear-gradient(135deg, #0f52ba 0%, #1a73e8 100%)',
-            borderRadius: 8,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 10px rgba(15, 82, 186, 0.3)'
-          }}>
-            <ExperimentOutlined style={{ fontSize: 18, color: '#fff' }} />
+    <div style={wrapperStyle}>
+      {/* Header - Only visible on public landing path */}
+      {isPublic && (
+        <header style={{
+          padding: '16px 40px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'rgba(10, 22, 40, 0.7)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 10
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 36, height: 36,
+              background: 'linear-gradient(135deg, #0f52ba 0%, #1a73e8 100%)',
+              borderRadius: 8,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 10px rgba(15, 82, 186, 0.3)'
+            }}>
+              <ExperimentOutlined style={{ fontSize: 18, color: '#fff' }} />
+            </div>
+            <Title level={3} style={{ margin: 0, color: '#fff', fontFamily: 'Outfit', letterSpacing: '-0.5px' }}>
+              GSTNet™ Diagnostic
+            </Title>
           </div>
-          <Title level={3} style={{ margin: 0, color: '#fff', fontFamily: 'Outfit', letterSpacing: '-0.5px' }}>
-            GSTNet™ Diagnostic
-          </Title>
-        </div>
-        <Button
-          type="ghost"
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate('/')}
-          style={{
-            borderColor: 'rgba(255, 255, 255, 0.25)',
-            color: 'rgba(255, 255, 255, 0.85)',
-            borderRadius: 8,
-            fontWeight: 600
-          }}
-        >
-          Back to Home Page
-        </Button>
-      </header>
+          <Button
+            type="ghost"
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate('/')}
+            style={{
+              borderColor: 'rgba(255, 255, 255, 0.25)',
+              color: 'rgba(255, 255, 255, 0.85)',
+              borderRadius: 8,
+              fontWeight: 600
+            }}
+          >
+            Back to Home Page
+          </Button>
+        </header>
+      )}
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: '40px 24px', maxWidth: 1200, margin: '0 auto', width: '100%' }}>
+      <main style={{ flex: 1, padding: mainPadding, maxWidth: 1200, margin: '0 auto', width: '100%' }}>
         {loading ? (
           <Card style={{ padding: '60px 20px', textAlign: 'center', borderRadius: 20, background: '#fff', color: '#000' }}>
             <Space direction="vertical" size={24} style={{ width: '100%' }}>
