@@ -1,0 +1,1 @@
+{"accuracy": 0.375, "loss": 1.1362, "precision": 0.375, "recall": 1.0, "f1_score": 0.5455, "confusion_matrix": [[0, 5], [0, 3]], "total_samples": 80}
