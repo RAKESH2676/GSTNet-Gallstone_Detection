@@ -234,7 +234,7 @@ const AdminDashboard = () => {
       dataIndex: 'created_at',
       key: 'created_at',
       sorter: true,
-      render: (time) => <Text type="secondary" style={{ fontSize: 12 }}>{new Date(time).toLocaleDateString()}</Text>
+      render: (time) => <Text type="secondary" style={{ fontSize: 12 }}>{new Date(time).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })} {new Date(time).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })}</Text>
     },
     {
       title: 'Actions',
@@ -316,7 +316,7 @@ const AdminDashboard = () => {
       dataIndex: 'timestamp',
       key: 'timestamp',
       sorter: true,
-      render: (time) => <Text type="secondary" style={{ fontSize: 12 }}>{new Date(time).toLocaleDateString()}</Text>
+      render: (time) => <Text type="secondary" style={{ fontSize: 12 }}>{new Date(time).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })} {new Date(time).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })}</Text>
     },
     {
       title: 'Actions',

@@ -25,7 +25,7 @@ class User(Base):
             "email": self.email,
             "role": self.role,
             "patient_id": self.patient_id,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": (self.created_at.isoformat() + "Z") if self.created_at else None,
         }
 
 
@@ -52,7 +52,7 @@ class Patient(Base):
             "gender": self.gender,
             "date_of_birth": self.date_of_birth,
             "age": self.age,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": (self.created_at.isoformat() + "Z") if self.created_at else None,
         }
 
 
@@ -82,6 +82,6 @@ class Prediction(Base):
             "prediction": self.prediction,
             "confidence": self.confidence,
             "report_path": self.report_path,
-            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+            "timestamp": (self.timestamp.isoformat() + "Z") if self.timestamp else None,
             "patient": self.patient.to_dict() if self.patient else None,
         }

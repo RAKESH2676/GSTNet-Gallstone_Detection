@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Table,
@@ -85,7 +85,7 @@ def generate_pdf_report(patient_name, patient_age, patient_gender, prediction,
     # ── HEADER ────────────────────────────────────────────────────────────────
     header_data = [[
         Paragraph("<b>GSTNet Gallstone Detection Report</b>", title_style),
-        Paragraph(f"Date: {datetime.now().strftime('%d %b %Y, %H:%M')}", meta_style)
+        Paragraph(f"Date: {datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime('%d %b %Y, %I:%M %p')} IST", meta_style)
     ]]
     header_table = Table(header_data, colWidths=[4.8*inch, 2.4*inch])
     header_table.setStyle(TableStyle([

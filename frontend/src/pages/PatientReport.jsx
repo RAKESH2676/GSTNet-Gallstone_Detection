@@ -302,7 +302,7 @@ const PatientReport = () => {
                       }}>
                         <Text type="secondary" style={{ fontSize: 12.5 }}>Diagnosis Date</Text>
                         <Text strong style={{ fontSize: 13 }}>
-                          {report.timestamp ? new Date(report.timestamp).toLocaleString() : '—'}
+                          {report.timestamp ? new Date(report.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : '—'}
                         </Text>
                       </div>
                     </Space>

@@ -325,7 +325,7 @@ const UploadScan = () => {
                           <Divider style={{ margin: '8px 0' }} />
                           <Text type="secondary" style={{ fontSize: 11 }}>DIAGNOSIS DATE</Text>
                           <Paragraph strong style={{ margin: 0, fontSize: 13 }}>
-                            {new Date(result.prediction.timestamp).toLocaleString()}
+                            {new Date(result.prediction.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                           </Paragraph>
                         </Col>
                       </Row>

@@ -188,7 +188,7 @@ const History = () => {
       sorter: true,
       render: (time) => (
         <Text type="secondary" style={{ fontSize: 12 }}>
-          {new Date(time).toLocaleDateString()} {new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {new Date(time).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })} {new Date(time).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })}
         </Text>
       )
     },
